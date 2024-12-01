@@ -1,6 +1,10 @@
 # Device
 ro.product.mod_device=peridot_global
 
+# Dalvik
+dalvik.vm.systemuicompilerfilter=speed
+dalvik.vm.systemservercompilerfilter=speed
+
 # QTI
 ro.vendor.qti.va_aosp.support=1
 

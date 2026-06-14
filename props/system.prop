@@ -1,6 +1,14 @@
 # Device
 ro.product.mod_device=peridot_global
 
+# Debug bringup
+persist.service.adb.enable=1
+persist.service.debuggable=1
+persist.sys.usb.config=adb
+persist.logd.logpersistd=logcatd
+persist.logd.size=16M
+ro.logd.size=16M
+
 # QTI
 ro.vendor.qti.va_aosp.support=1
 

@@ -46,34 +46,21 @@ PRODUCT_SHIPPING_API_LEVEL := $(BOARD_SHIPPING_API_LEVEL)
 
 # Audio
 PRODUCT_PACKAGES += \
+    android.hardware.audio.effect@7.0-impl \
+    android.hardware.audio@7.1-impl \
     android.hardware.audio.service
 
 PRODUCT_PACKAGES += \
-    android.hardware.audio.effect@7.0-impl \
-    android.hardware.audio@7.1-impl \
-    android.hardware.soundtrigger@2.3-impl
-
-PRODUCT_PACKAGES += \
-    audioadsprpcd \
-    audio.bluetooth.default \
-    audio.r_submix.default \
-    audio.usb.default
-
-PRODUCT_PACKAGES += \
-    libagm_compress_plugin \
+    libsndcardparser \
     libagm_mixer_plugin \
     libagm_pcm_plugin \
+    libagm_compress_plugin \
     libagmclient \
-    libaudiochargerlistener \
-    libbatterylistener \
-    libfmpal \
+    audioadsprpcd \
+    audio.bluetooth.default \
     libhapticgenerator \
-    libhfp_pal \
-    libqcompostprocbundle \
-    libqcomvisualizer \
-    libqcomvoiceprocessing \
-    libsndcardparser \
-    libvolumelistener \
+    audio.r_submix.default \
+    audio.usb.default \
     vendor.qti.hardware.pal@1.0.vendor
 
 PRODUCT_COPY_FILES += \

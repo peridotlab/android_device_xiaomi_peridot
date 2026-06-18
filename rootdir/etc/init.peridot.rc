@@ -6,6 +6,12 @@
 import /vendor/etc/init/hw/init.batterysecret.rc
 import /vendor/etc/init/hw/init.mi_thermald.rc
 
+# Userdebug starts Android's interactive console unconditionally. Keep it
+# stopped on production device builds so it cannot hold the UART open or
+# trigger the persistent "Serial console enabled" notification.
+on property:init.svc.console=running
+    stop console
+
 on early-boot
     # Modem
     mkdir /data/vendor/modem 0777 root root

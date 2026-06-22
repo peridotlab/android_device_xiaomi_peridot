@@ -1,0 +1,29 @@
+From b08cbeb9ea49cfb66e2bdff606a45543cffa3d60 Mon Sep 17 00:00:00 2001
+From: farmei <farmei@proton.me>
+Date: Sun, 14 Jun 2026 17:24:45 +0000
+Subject: [PATCH] audio_route: Add libaudioroute-v34
+
+Change-Id: I00e080c8676f5671665ec09974be6d7b7c6c2ae4
+---
+ audio_route/Android.bp | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/audio_route/Android.bp b/audio_route/Android.bp
+index fbe23aada..8df6c5d76 100644
+--- a/audio_route/Android.bp
++++ b/audio_route/Android.bp
+@@ -32,6 +32,14 @@ cc_library_shared {
+     ],
+ }
+ 
++cc_library_shared {
++    name: "libaudioroute-v34",
++    defaults: ["libaudioroute_defaults"],
++    shared_libs: [
++        "libtinyalsa",
++    ],
++}
++
+ cc_library_shared {
+     name: "libaudioroutev2",
+     defaults: ["libaudioroute_defaults"],

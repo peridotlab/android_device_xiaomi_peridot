@@ -1,0 +1,317 @@
+From c6bcc20c2c58a8af34556d9f98c11b3a4753e5a4 Mon Sep 17 00:00:00 2001
+From: farmei <farmei@proton.me>
+Date: Sun, 14 Jun 2026 17:24:45 +0000
+Subject: [PATCH] agm: Convert bringup libraries to Soong
+
+Change-Id: Ib2865b6271214918f41f06bd278352884dbf0c39
+---
+ Android.mk                               |  3 -
+ ipc/HwBinders/agm_ipc_client/Android.bp  | 38 ++++++++++++
+ ipc/HwBinders/agm_ipc_client/Android.mk  | 34 -----------
+ ipc/HwBinders/agm_ipc_service/Android.mk | 66 --------------------
+ service/Android.bp                       | 41 +++++++++++++
+ service/Android.mk                       | 78 ------------------------
+ 6 files changed, 79 insertions(+), 181 deletions(-)
+ delete mode 100644 Android.mk
+ create mode 100644 ipc/HwBinders/agm_ipc_client/Android.bp
+ delete mode 100644 ipc/HwBinders/agm_ipc_client/Android.mk
+ delete mode 100644 ipc/HwBinders/agm_ipc_service/Android.mk
+ create mode 100644 service/Android.bp
+ delete mode 100644 service/Android.mk
+
+diff --git a/Android.mk b/Android.mk
+deleted file mode 100644
+index eb27e3f..0000000
+--- a/Android.mk
++++ /dev/null
+@@ -1,3 +0,0 @@
+-ifeq ($(strip $(TARGET_USES_QCOM_MM_AUDIO)),true)
+-	include $(call all-subdir-makefiles)
+-endif
+diff --git a/ipc/HwBinders/agm_ipc_client/Android.bp b/ipc/HwBinders/agm_ipc_client/Android.bp
+new file mode 100644
+index 0000000..2527ad2
+--- /dev/null
++++ b/ipc/HwBinders/agm_ipc_client/Android.bp
+@@ -0,0 +1,38 @@
++//
++// Copyright (C) 2024 The LineageOS Project
++//
++// SPDX-License-Identifier: Apache-2.0
++//
++
++cc_library_headers {
++    name: "libagmclient_headers",
++    export_include_dirs: ["inc"],
++    vendor: true,
++}
++
++cc_library_shared {
++    name: "libagmclient",
++    owner: "qti",
++    vendor: true,
++
++    cflags: ["-Wno-format"],
++
++    srcs: [
++        "src/agm_client_wrapper.cpp",
++        "src/AGMCallback.cpp",
++    ],
++
++    include_dirs: ["hardware/qcom-caf/sm8650/audio/agm/ipc/HwBinders/agm_ipc_client/inc"],
++
++    shared_libs: [
++        "libhidlbase",
++        "libutils",
++        "liblog",
++        "libcutils",
++        "libhardware",
++        "libbase",
++        "vendor.qti.hardware.AGMIPC@1.0",
++    ],
++
++    header_libs: ["libagm_headers"],
++}
+diff --git a/ipc/HwBinders/agm_ipc_client/Android.mk b/ipc/HwBinders/agm_ipc_client/Android.mk
+deleted file mode 100644
+index c72adc1..0000000
+--- a/ipc/HwBinders/agm_ipc_client/Android.mk
++++ /dev/null
+@@ -1,34 +0,0 @@
+-LOCAL_PATH := $(call my-dir)
+-
+-include $(CLEAR_VARS)
+-
+-LOCAL_MODULE := libagmclient_headers
+-LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)/inc
+-LOCAL_VENDOR_MODULE := true
+-
+-include $(BUILD_HEADER_LIBRARY)
+-
+-include $(CLEAR_VARS)
+-LOCAL_MODULE := libagmclient
+-LOCAL_MODULE_OWNER := qti
+-LOCAL_VENDOR_MODULE := true
+-
+-LOCAL_CFLAGS := -Wno-format
+-LOCAL_SRC_FILES := \
+-    src/agm_client_wrapper.cpp\
+-    src/AGMCallback.cpp
+-
+-LOCAL_C_INCLUDES := $(LOCAL_PATH)/inc
+-
+-LOCAL_SHARED_LIBRARIES := \
+-    libhidlbase \
+-    libutils \
+-    liblog \
+-    libcutils \
+-    libhardware \
+-    libbase \
+-    vendor.qti.hardware.AGMIPC@1.0
+-
+-LOCAL_HEADER_LIBRARIES := libagm_headers
+-
+-include $(BUILD_SHARED_LIBRARY)
+diff --git a/ipc/HwBinders/agm_ipc_service/Android.mk b/ipc/HwBinders/agm_ipc_service/Android.mk
+deleted file mode 100644
+index 4c71c04..0000000
+--- a/ipc/HwBinders/agm_ipc_service/Android.mk
++++ /dev/null
+@@ -1,66 +0,0 @@
+-LOCAL_PATH := $(call my-dir)
+-include $(CLEAR_VARS)
+-
+-LOCAL_MODULE        := vendor.qti.hardware.AGMIPC@1.0-impl
+-LOCAL_MODULE_OWNER  := qti
+-LOCAL_VENDOR_MODULE := true
+-
+-ifeq ($(SOONG_CONFIG_android_hardware_audio_run_64bit), true)
+-LOCAL_MULTILIB := 64
+-endif
+-
+-LOCAL_CFLAGS        += -v -Wall
+-LOCAL_CFLAGS        += -D_ANDROID_
+-LOCAL_SRC_FILES     := src/agm_server_wrapper.cpp
+-
+-LOCAL_C_INCLUDES := \
+-    $(call project-path-for,qcom-audio)/agm/service/inc/public
+-
+-LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)/inc
+-
+-LOCAL_SHARED_LIBRARIES := \
+-    libhidlbase \
+-    libutils \
+-    liblog \
+-    libcutils \
+-    libhardware \
+-    libbase \
+-    libar-gsl \
+-    vendor.qti.hardware.AGMIPC@1.0 \
+-    libutilscallstack \
+-    libagm
+-
+-ifeq ($(strip $(AUDIO_FEATURE_ENABLED_AGM_HIDL)),true)
+-  LOCAL_CFLAGS += -DAGM_HIDL_ENABLED
+-endif
+-LOCAL_HEADER_LIBRARIES := libagmclient_headers
+-
+-include $(BUILD_SHARED_LIBRARY)
+-
+-ifneq ($(strip $(AUDIO_FEATURE_ENABLED_AGM_HIDL)),true)
+-include $(CLEAR_VARS)
+-
+-LOCAL_MODULE               := vendor.qti.hardware.AGMIPC@1.0-service
+-LOCAL_INIT_RC              := vendor.qti.hardware.AGMIPC@1.0-service.rc
+-LOCAL_VENDOR_MODULE        := true
+-LOCAL_MODULE_RELATIVE_PATH := hw
+-LOCAL_MODULE_OWNER         := qti
+-
+-LOCAL_SRC_FILES            := src/service.cpp
+-
+-LOCAL_SHARED_LIBRARIES := \
+-    liblog \
+-    libcutils \
+-    libdl \
+-    libbase \
+-    libutils \
+-    libhardware \
+-    libhidlbase \
+-    vendor.qti.hardware.AGMIPC@1.0 \
+-    vendor.qti.hardware.AGMIPC@1.0-impl \
+-    libagm
+-
+-LOCAL_HEADER_LIBRARIES := libagmclient_headers
+-
+-include $(BUILD_EXECUTABLE)
+-endif
+diff --git a/service/Android.bp b/service/Android.bp
+new file mode 100644
+index 0000000..93edbcf
+--- /dev/null
++++ b/service/Android.bp
+@@ -0,0 +1,41 @@
++//
++// Copyright (C) 2024 The LineageOS Project
++//
++// SPDX-License-Identifier: Apache-2.0
++//
++
++cc_library_headers {
++    name: "libagm_headers",
++    export_include_dirs: ["inc/public"],
++    vendor: true,
++}
++
++cc_library_shared {
++    name: "libagm",
++    owner: "qti",
++    vendor: true,
++
++    srcs: [
++        "src/agm.c",
++        "src/utils.c",
++    ],
++
++    include_dirs: [
++        "hardware/qcom-caf/sm8650/audio/agm/service/inc",
++        "hardware/qcom-caf/sm8650/audio/agm/service/inc/public",
++    ],
++
++    shared_libs: [
++        "liblog",
++        "libcutils",
++        "libutils",
++        "libbinder",
++        "libhidlbase",
++        "vendor.qti.hardware.AGMIPC@1.0",
++    ],
++
++    header_libs: [
++        "libagm_headers",
++        "libagmclient_headers",
++    ],
++}
+diff --git a/service/Android.mk b/service/Android.mk
+deleted file mode 100644
+index 7112229..0000000
+--- a/service/Android.mk
++++ /dev/null
+@@ -1,78 +0,0 @@
+-LOCAL_PATH := $(call my-dir)
+-# Build libagm_headers
+-include $(CLEAR_VARS)
+-LOCAL_MODULE                := libagm_headers
+-LOCAL_VENDOR_MODULE         := true
+-LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)/inc/public
+-include $(BUILD_HEADER_LIBRARY)
+-
+-# Build libagm
+-ifneq ($(TARGET_PROVIDES_LIBAGM),true)
+-include $(CLEAR_VARS)
+-
+-LOCAL_MODULE        := libagm
+-LOCAL_MODULE_OWNER  := qti
+-LOCAL_MODULE_TAGS   := optional
+-LOCAL_VENDOR_MODULE := true
+-
+-ifeq ($(SOONG_CONFIG_android_hardware_audio_run_64bit), true)
+-LOCAL_MULTILIB := 64
+-endif
+-
+-LOCAL_CFLAGS        := -D_ANDROID_ -DAGM_DEBUG_METADATA -DAGM_USE_CUTILS
+-LOCAL_CFLAGS        += -Wno-tautological-compare -Wno-macro-redefined -Wall
+-LOCAL_CFLAGS        += -D_GNU_SOURCE -DACDB_PATH=\"/vendor/etc/acdbdata/\"
+-LOCAL_CFLAGS        += -DACDB_DELTA_FILE_PATH="/data/vendor/audio/acdbdata/delta"
+-LOCAL_CFLAGS        += -Wno-incompatible-pointer-types
+-LOCAL_CFLAGS        += -Wno-pointer-integer-compare
+-LOCAL_CFLAGS        += -DAGM_MEMLOG_UNSUPPORTED
+-
+-LOCAL_C_INCLUDES    := $(LOCAL_PATH)/inc/public
+-LOCAL_C_INCLUDES    += $(LOCAL_PATH)/inc/private
+-
+-LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)/inc/public
+-
+-LOCAL_SRC_FILES  := \
+-    src/agm.c\
+-    src/graph.c\
+-    src/graph_module.c\
+-    src/metadata.c\
+-    src/session_obj.c\
+-    src/device.c \
+-    src/utils.c \
+-    src/device_hw_ep.c
+-
+-LOCAL_HEADER_LIBRARIES := \
+-    libarpal_headers \
+-    libspf-headers \
+-    libutils_headers \
+-    libacdb_headers \
+-    libarmemlog_headers
+-
+-LOCAL_SHARED_LIBRARIES := \
+-    libar-gsl \
+-    liblog \
+-    liblx-osal \
+-    libaudioroute \
+-    libats \
+-    libcutils
+-
+-#if android version is R, use qtitinyalsa lib otherwise use upstream ones
+-#This assumes we would be using AR code only for Android R and subsequent versions.
+-ifneq ($(filter R 11,$(PLATFORM_VERSION)),)
+-LOCAL_SHARED_LIBRARIES += libqti-tinyalsa
+-else
+-LOCAL_SHARED_LIBRARIES += libtinyalsa
+-endif
+-
+-
+-ifeq ($(strip $(AUDIO_FEATURE_ENABLED_DYNAMIC_LOG)), true)
+-LOCAL_CFLAGS           += -DDYNAMIC_LOG_ENABLED
+-LOCAL_C_INCLUDES       += $(TOP)/external/expat/lib/expat.h
+-LOCAL_SHARED_LIBRARIES += libaudio_log_utils
+-LOCAL_SHARED_LIBRARIES += libexpat
+-LOCAL_HEADER_LIBRARIES += libaudiologutils_headers
+-endif
+-
+-include $(BUILD_SHARED_LIBRARY)
+-endif

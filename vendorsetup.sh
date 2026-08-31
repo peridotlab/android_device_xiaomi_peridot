@@ -32,5 +32,5 @@ apply_patch() {
     fi
 }
 
-apply_patch "vendor/qcom/opensource/agm" "0001-agm-convert-bringup-libraries-to-soong.patch" "agm: Convert bringup libraries to Soong"
+apply_patch "hardware/qcom-caf/sm8650/audio/agm" "0001-agm-convert-bringup-libraries-to-soong.patch" "agm: Convert bringup libraries to Soong"
 apply_patch "system/media" "0002-audio-route-add-libaudioroute-v34.patch" "audio_route: Add libaudioroute-v34"

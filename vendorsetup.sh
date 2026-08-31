@@ -6,27 +6,30 @@ apply_patch() {
     local dir="$1"
     local patch="$2"
     local subject="$3"
+    local top="${ANDROID_BUILD_TOP:-$(gettop)}"
+    local target_dir="$top/$dir"
+    local patch_path="$top/$DEVICE_PATH/patches/$patch"
 
-    if [ ! -d "$dir" ]; then
+    if [ ! -d "$target_dir" ]; then
         echo "[peridot] ERROR: $dir not found, cannot apply $patch"
         return
     fi
 
-    cd "$dir" || return
-
-    if git log --oneline | grep -q "$subject"; then
-        cd - > /dev/null || return
+    if [ ! -f "$patch_path" ]; then
+        echo "[peridot] ERROR: $patch_path not found"
         return
     fi
 
-    if ! git am --ignore-whitespace "$DEVICE_PATH/patches/$patch" 2>/tmp/peridot_patch_err; then
-        git am --abort 2>/dev/null || true
+    if git -C "$target_dir" log --oneline | grep -q "$subject"; then
+        return
+    fi
+
+    if ! git -C "$target_dir" am --ignore-whitespace "$patch_path" 2>/tmp/peridot_patch_err; then
+        git -C "$target_dir" am --abort 2>/dev/null || true
         echo "[peridot] ERROR: Failed to apply $patch"
         cat /tmp/peridot_patch_err
         rm -f /tmp/peridot_patch_err
     fi
-
-    cd - > /dev/null || return
 }
 
 apply_patch "vendor/qcom/opensource/agm" "0001-agm-convert-bringup-libraries-to-soong.patch" "agm: Convert bringup libraries to Soong"
